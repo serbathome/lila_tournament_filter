@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tounaments search</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+
+    <script id="tournment-template" type="text/x-handlebars-template">
+        <table class="table">
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td>Time/Inc</td>
+                    <td>SecondsToStart</td>
+                    <td>Type</td>
+                    <td>Link</td>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each tt}}
+                <tr>
+                    <td>{{ this.fullName }}</td>
+                    <td>{{ this.clock.limit}}/{{ this.clock.increment }}</td>
+                    <td>{{ this.secondsToStart }}</td>
+                    <td>{{ this.perf.name }}</td>
+                    <td><a href="https://lichess.org/tournament/{{ this.id }}">Join</a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </script>
+    <script>
+
+        var type = 'Any';
+
+        var tournaments = {};
+
+        // callback for unuiqe function
+        function onlyUnique(value, index, self) {
+            return self.indexOf(value) === index;
+        }
+
+        //callback for sort out specific tournament type
+        function SortTournament(tournament) {
+            if (type == 'Any') {
+                return tournament;
+            }
+            else return tournament.perf.name == type
+        }
+
+        // make templates
+        var source = document.getElementById("tournment-template").innerHTML;
+        var template = Handlebars.compile(source);
+
+        // after DOM is loaded        
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // set handler for sort btn
+            document.getElementById("sort").onclick = () => {
+                var status = $("#status :selected").text();
+                type = $("#type :selected").text();
+                var html = template({ tt: tournaments[status].filter(SortTournament) });
+                $("#content").html(html);
+                return false;
+            }
+
+            // fetch data 
+            $.ajax({
+                url: "https://lichess.org/api/tournament",
+                data: {
+                },
+                success: function (result) {
+
+                    var types = ['Any'];
+                    tournaments = result;
+
+                    result.created.forEach(element => {
+                        types.push(element.perf.name);
+                    });
+                    result.started.forEach(element => {
+                        types.push(element.perf.name);
+                    });
+                    result.finished.forEach(element => {
+                        types.push(element.perf.name);
+                    });
+                    var unique_types = types.filter(onlyUnique);
+
+                    var element = document.getElementById("type");
+                    unique_types.forEach(el => {
+                        var opt = document.createElement('option');
+                        opt.text = el;
+                        element.appendChild(opt);
+                    });
+
+                    var html = template({ tt: result.created });
+                    document.getElementById("content").innerHTML = html;
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md6">
+                    <label for="status">Tournament status</label>
+                    <select class="custom-select" id="status">
+                        <option value="1">created</option>
+                        <option value="2">started</option>
+                        <option value="3">finished</option>
+                    </select>
+                </div>
+                <div class="form-group col-md6">
+                    <label for="type">Tournament type</label>
+                    <select class="custom-select" id="type"></select>
+                </div>
+                <div class="form-group col-md6">
+                    <label for="sort">Sort</label><br>
+                    <input id="sort" type="button" class="btn btn-primary" value="Refresh and sort">
+                </div>
+            </div>
+
+        </form>
+        <div id="content"></div>
+    </div>
+</body>
+
+</html>
