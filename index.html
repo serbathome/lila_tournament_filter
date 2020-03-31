@@ -18,9 +18,10 @@
             <thead>
                 <tr>
                     <td>Name</td>
-                    <td>Time/Inc</td>
-                    <td>SecondsToStart</td>
+                    <td>Control</td>
+                    <td>Starting in</td>
                     <td>Type</td>
+                    <td>Players</td>
                     <td>Link</td>
                 </tr>
             </thead>
@@ -28,9 +29,10 @@
                 {{#each tt}}
                 <tr>
                     <td>{{ this.fullName }}</td>
-                    <td>{{ this.clock.limit}}/{{ this.clock.increment }}</td>
-                    <td>{{ this.secondsToStart }}</td>
+                    <td>{{ this.limitminutes }}+{{ this.clock.increment }}</td>
+                    <td>{{ this.startingin }}</td>
                     <td>{{ this.perf.name }}</td>
+                    <td>{{ this.nbPlayers }}</td>
                     <td><a href="https://lichess.org/tournament/{{ this.id }}">Join</a></td>
                 </tr>
                 {{/each}}
@@ -54,6 +56,31 @@
                 return tournament;
             }
             else return tournament.perf.name == type
+        }
+
+        // seconds to string conversion function
+        Number.prototype.toHHMMSS = function () {
+            //var sec_num = parseInt(this, 10); // don't forget the second param
+            var sec_num = this;
+            var days = Math.floor(sec_num / 86400);
+            sec_num = sec_num - (days * 86400);
+            var hours = Math.floor(sec_num / 3600);
+            var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+            var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+            if (hours < 10) { hours = "0" + hours; }
+            if (minutes < 10) { minutes = "0" + minutes; }
+            if (seconds < 10) { seconds = "0" + seconds; }
+
+            if (days == 0) {
+                return hours + ':' + minutes + ':' + seconds;
+            }
+            else if (days == 1) {
+                return days + ' day, ' + hours + ':' + minutes + ':' + seconds;
+            }
+            else {
+                return days + ' days, ' + hours + ':' + minutes + ':' + seconds;
+            }
         }
 
         // make templates
@@ -82,14 +109,20 @@
                     var types = ['Any'];
                     tournaments = result;
 
-                    result.created.forEach(element => {
+                    tournaments.created.forEach(element => {
                         types.push(element.perf.name);
+                        element.startingin = element.secondsToStart.toHHMMSS();
+                        element.limitminutes = element.clock.limit / 60;
                     });
-                    result.started.forEach(element => {
+                    tournaments.started.forEach(element => {
                         types.push(element.perf.name);
+                        element.startingin = "Running";
+                        element.limitminutes = element.clock.limit / 60;
                     });
-                    result.finished.forEach(element => {
+                    tournaments.finished.forEach(element => {
                         types.push(element.perf.name);
+                        element.startingin = "Finished";
+                        element.limitminutes = element.clock.limit / 60;
                     });
                     var unique_types = types.filter(onlyUnique);
 
