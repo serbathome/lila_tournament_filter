@@ -110,7 +110,7 @@
                 },
                 success: function (result) {
 
-                    var types = ['Any'];
+                    var types = [];
                     tournaments = result;
 
                     tournaments.created.forEach(element => {
@@ -129,6 +129,10 @@
                         element.limitminutes = element.clock.limit / 60;
                     });
                     var unique_types = types.filter(onlyUnique);
+
+                    // sort alphabetically and add 'Any' as first element
+                    unique_types.sort();
+                    unique_types.splice(0, 0, 'Any');
 
                     var element = document.getElementById("type");
                     unique_types.forEach(el => {
