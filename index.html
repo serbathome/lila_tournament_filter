@@ -21,17 +21,21 @@
                     <td>Control</td>
                     <td>Starting in</td>
                     <td>Type</td>
+                    <td>Limited rating</td>
+                    <td>Owner</td>
                     <td>Players</td>
                     <td>Link</td>
                 </tr>
             </thead>
             <tbody>
                 {{#each tt}}
-                <tr>
+                <tr {{#if this.schedule.freq}}bgcolor="#ededed"{{/if}}>
                     <td>{{ this.fullName }}</td>
                     <td>{{ this.limitminutes }}+{{ this.clock.increment }}</td>
                     <td>{{ this.startingin }}</td>
                     <td>{{ this.perf.name }}</td>
+                    <td>{{#if this.hasMaxRating }}Yes{{/if}}</td>
+                    <td>{{ this.createdBy }}</td>
                     <td>{{ this.nbPlayers }}</td>
                     <td><a href="https://lichess.org/tournament/{{ this.id }}">Join</a></td>
                 </tr>
@@ -142,7 +146,10 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
+        <div class="alert alert-secondary" role="alert">
+            This is a simple Lichess.org tournament filtering form. Regular tournaments are marked in light grey.
+        </div>
         <form>
             <div class="form-row">
                 <div class="form-group col-md6">
@@ -158,8 +165,8 @@
                     <select class="custom-select" id="type"></select>
                 </div>
                 <div class="form-group col-md6">
-                    <label for="sort">Sort</label><br>
-                    <input id="sort" type="button" class="btn btn-primary" value="Refresh and sort">
+                    <label for="sort">Filter</label><br>
+                    <input id="sort" type="button" class="btn btn-primary" value="Filter">
                 </div>
             </div>
 
