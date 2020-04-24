@@ -27,9 +27,9 @@
                     </div>
                 </div>
                 <div class="control">
-                    <div class="select">
-                        <select v-model="type">
-                            <option value="Any">Any</option>
+                    <div class="select is-multiple">
+                        <select v-model="type" multiple size="4">
+                            <option selected="Any">Any</option>
                             <option value="UltraBullet">UltraBullet</option>
                             <option value="Bullet">Bullet</option>
                             <option value="Blitz">Blitz</option>
@@ -55,12 +55,14 @@
                 <thead>
                     <tr>
                         <td>Name</td>
-                        <td>Contol</td>
+                        <td>Control</td>
                         <td>Starting in</td>
+                        <td>Ending in</td>
                         <td>Type</td>
                         <td>Limited rating</td>
                         <td>Owner</td>
                         <td>Players</td>
+                        <td>Position</td>
                         <td>Link</td>
                     </tr>
                 </thead>
@@ -72,10 +74,12 @@
                         </td>
                         <td>{{ record.clock.limit / 60}} + {{ record.clock.increment }}</td>
                         <td>{{ record.secondsToStart.toHHMMSS() }}</td>
+                        <td>{{ Math.round((record.finishesAt - new Date().getTime())/1000).toHHMMSS()}}</td>
                         <td>{{ record.perf.name }}</td>
                         <td><span v-if="record.hasMaxRating">Yes</span><span v-else>No</span></td>
                         <td>{{ record.createdBy }}</td>
                         <td>{{ record.nbPlayers }}</td>
+                        <td><span v-if="record.position">{{ record.position.name + " (" + record.position.eco + ")" }}</span><span v-else>Any</span></td>
                         <td><a :href="'https://lichess.org/tournament/' + record.id">Join</a></td>
                     </tr>
                 </tbody>
@@ -130,7 +134,7 @@
                     }
                     if (this.type != 'Any') {
                         this.filtered = this.selected.filter(a => {
-                            return a.perf.name === this.type
+                            return this.type.includes(a.perf.name)
                         });
                     }
                     else {
