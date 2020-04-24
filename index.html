@@ -4,78 +4,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tounaments search</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <title>Lichess tournaments</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+</head>
 
-    <script id="tournment-template" type="text/x-handlebars-template">
-        <table class="table">
-            <thead>
-                <tr>
-                    <td>Name</td>
-                    <td>Control</td>
-                    <td>Starting in</td>
-                    <td>Type</td>
-                    <td>Limited rating</td>
-                    <td>Owner</td>
-                    <td>Players</td>
-                    <td>Link</td>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each tt}}
-                <tr {{#if this.schedule.freq}}bgcolor="#ededed"{{/if}}>
-                    <td>{{ this.fullName }}</td>
-                    <td>{{ this.limitminutes }}+{{ this.clock.increment }}</td>
-                    <td>{{ this.startingin }}</td>
-                    <td>{{ this.perf.name }}</td>
-                    <td>{{#if this.hasMaxRating }}Yes{{/if}}</td>
-                    <td>{{ this.createdBy }}</td>
-                    <td>{{ this.nbPlayers }}</td>
-                    <td><a href="https://lichess.org/tournament/{{ this.id }}">Join</a></td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </script>
+<body>
+    <div class="container content">
+        <div id='app'>
+            <figure class="image">
+                <img src="img/logo.jpg" alt="logo">
+            </figure>
+            <div class="field is-grouped">
+                <div class="control">
+                    <div class="select">
+                        <select v-model="status">
+                            <option value="created">created</option>
+                            <option value="started">started</option>
+                            <option value="finished">finished</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control">
+                    <div class="select">
+                        <select v-model="type">
+                            <option value="Any">Any</option>
+                            <option value="UltraBullet">UltraBullet</option>
+                            <option value="Bullet">Bullet</option>
+                            <option value="Blitz">Blitz</option>
+                            <option value="Rapid">Rapid</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Crazyhouse">Crazyhouse</option>
+                            <option value="Chess960">Chess960</option>
+                            <option value="King of the Hill">King of the Hill</option>
+                            <option value="Three-check">Three-check</option>
+                            <option value="Antichess">Antichess</option>
+                            <option value="Atomic">Atomic</option>
+                            <option value="Horde">Horde</option>
+                            <option value="Racing King">Racing King</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control">
+                    <button class="button is-primary" @click="filter">Filter</button>
+                </div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>Name</td>
+                        <td>Contol</td>
+                        <td>Starting in</td>
+                        <td>Type</td>
+                        <td>Limited rating</td>
+                        <td>Owner</td>
+                        <td>Players</td>
+                        <td>Link</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="record in filtered">
+                        <td>{{ record.fullName }}
+                            <span v-if='record.schedule'><i>(regular)</i></span>
+                            <span v-else></span>
+                        </td>
+                        <td>{{ record.clock.limit / 60}} + {{ record.clock.increment }}</td>
+                        <td>{{ record.secondsToStart.toHHMMSS() }}</td>
+                        <td>{{ record.perf.name }}</td>
+                        <td><span v-if="record.hasMaxRating">Yes</span><span v-else>No</span></td>
+                        <td>{{ record.createdBy }}</td>
+                        <td>{{ record.nbPlayers }}</td>
+                        <td><a :href="'https://lichess.org/tournament/' + record.id">Join</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <script>
-
-        var type = 'Any';
-
-        var tournaments = {};
-
-        // callback for unuiqe function
-        function onlyUnique(value, index, self) {
-            return self.indexOf(value) === index;
-        }
-
-        //callback for sort out specific tournament type
-        function SortTournament(tournament) {
-            if (type == 'Any') {
-                return tournament;
-            }
-            else return tournament.perf.name == type
-        }
-
-        // seconds to string conversion function
         Number.prototype.toHHMMSS = function () {
-            //var sec_num = parseInt(this, 10); // don't forget the second param
             var sec_num = this;
             var days = Math.floor(sec_num / 86400);
             sec_num = sec_num - (days * 86400);
             var hours = Math.floor(sec_num / 3600);
             var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
             var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
             if (hours < 10) { hours = "0" + hours; }
             if (minutes < 10) { minutes = "0" + minutes; }
             if (seconds < 10) { seconds = "0" + seconds; }
-
             if (days == 0) {
                 return hours + ':' + minutes + ':' + seconds;
             }
@@ -86,97 +103,56 @@
                 return days + ' days, ' + hours + ':' + minutes + ':' + seconds;
             }
         }
-
-        // make templates
-        var source = document.getElementById("tournment-template").innerHTML;
-        var template = Handlebars.compile(source);
-
-        // after DOM is loaded        
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // set handler for sort btn
-            document.getElementById("sort").onclick = () => {
-                var status = $("#status :selected").text();
-                type = $("#type :selected").text();
-                var html = template({ tt: tournaments[status].filter(SortTournament) });
-                $("#content").html(html);
-                return false;
-            }
-
-            // fetch data 
-            $.ajax({
-                url: "https://lichess.org/api/tournament",
-                data: {
-                },
-                success: function (result) {
-
-                    var types = [];
-                    tournaments = result;
-
-                    tournaments.created.forEach(element => {
-                        types.push(element.perf.name);
-                        element.startingin = element.secondsToStart.toHHMMSS();
-                        element.limitminutes = element.clock.limit / 60;
-                    });
-                    tournaments.started.forEach(element => {
-                        types.push(element.perf.name);
-                        element.startingin = "Running";
-                        element.limitminutes = element.clock.limit / 60;
-                    });
-                    tournaments.finished.forEach(element => {
-                        types.push(element.perf.name);
-                        element.startingin = "Finished";
-                        element.limitminutes = element.clock.limit / 60;
-                    });
-                    var unique_types = types.filter(onlyUnique);
-
-                    // sort alphabetically and add 'Any' as first element
-                    unique_types.sort();
-                    unique_types.splice(0, 0, 'Any');
-
-                    var element = document.getElementById("type");
-                    unique_types.forEach(el => {
-                        var opt = document.createElement('option');
-                        opt.text = el;
-                        element.appendChild(opt);
-                    });
-
-                    var html = template({ tt: result.created });
-                    document.getElementById("content").innerHTML = html;
+        var app = new Vue({
+            el: '#app',
+            data: {
+                version: '0.2',
+                status: 'created',
+                type: 'Any',
+                created: [],
+                started: [],
+                finished: [],
+                selected: [],
+                filtered: [],
+            },
+            methods: {
+                filter: function () {
+                    switch (this.status) {
+                        case 'created':
+                            this.selected = this.created;
+                            break;
+                        case 'started':
+                            this.selected = this.started;
+                            break;
+                        case 'finished':
+                            this.selected = this.finished;
+                            break;
+                    }
+                    if (this.type != 'Any') {
+                        this.filtered = this.selected.filter(a => {
+                            return a.perf.name === this.type
+                        });
+                    }
+                    else {
+                        this.filtered = this.selected;
+                    }
                 }
-            });
+            },
+            mounted: function () {
+                axios.get('https://lichess.org/api/tournament')
+                    .then(response => {
+                        this.created = response.data.created;
+                        this.started = response.data.started;
+                        this.finished = response.data.finished;
+                        this.selected = this.created;
+                        this.filtered = this.selected;
+                    })
+                    .catch(error => {
+                        console.log('Something went wrong: ' + error);
+                    });
+            }
         });
     </script>
-</head>
-
-<body>
-    <div class="container-fluid">
-        <div class="alert alert-secondary" role="alert">
-            This is a simple Lichess.org tournament filtering form. Regular tournaments are marked in light grey.
-        </div>
-        <form>
-            <div class="form-row">
-                <div class="form-group col-md6">
-                    <label for="status">Tournament status</label>
-                    <select class="custom-select" id="status">
-                        <option value="1">created</option>
-                        <option value="2">started</option>
-                        <option value="3">finished</option>
-                    </select>
-                </div>
-                <div class="form-group col-md6">
-                    <label for="type">Tournament type</label>
-                    <select class="custom-select" id="type"></select>
-                </div>
-                <div class="form-group col-md6">
-                    <label for="sort">Filter</label><br>
-                    <input id="sort" type="button" class="btn btn-primary" value="Filter">
-                </div>
-            </div>
-
-        </form>
-        <div id="content"></div>
-    </div>
 </body>
 
 </html>
