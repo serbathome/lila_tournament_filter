@@ -20,25 +20,43 @@
                 <img src="img/logo.jpg" alt="logo">
             </figure>
             <div class="field is-grouped">
-                <div class="control">
-                    <div class="select">
-                        <select v-model="status">
-                            <option value="all">All</option>
-                            <option value="created">Created</option>
-                            <option value="started">Started</option>
-                            <option value="finished">Finished</option>
-                        </select>
+                <div class="field has-addons">
+                    <div class="control">
+                        <div class="select">
+                            <select v-model="status">
+                                <option value="all">All</option>
+                                <option value="created">Created</option>
+                                <option value="started">Started</option>
+                                <option value="finished">Finished</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control" style="width:450px;">
+                        <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false" :clear-on-select="false" :preserve-search="true" :searchable="false" :limit="2">
+                        </multiselect>
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" @click="filter" class="right">Filter</button>
                     </div>
                 </div>
-                <div class="control" style="width:450px;">
-                    <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false" :clear-on-select="false" :preserve-search="true" :placeholder="Variants" :searchable="false" :limit="2">
-                    </multiselect>
+                <div class="field has-addons">
+                    <div class ="control">
+                        <div class="select">
+                            <select v-model="searchBy">
+                                <option value="name">Name</option>
+                                <option value="owner">Owner</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="Search by tournament name." id="searchtext">
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" @click="filterSearch" class=right>Search</button>
+                    </div>
                 </div>
                 <div class="control">
-                    <button class="button is-danger" @click="clearAll" class=right>Clear</button>
-                </div>
-                <div class="control">
-                    <button class="button is-primary" @click="filter" class="right">Filter</button>
+                    <button class="button is-danger" @click="clearAll" class=right>Clear All</button>
                 </div>
             </div>
 
@@ -113,6 +131,8 @@
                 finished: [],
                 selected: [],
                 filtered: [],
+                searchBy: 'name',
+                searchtext: '',
                 variant_options: ["UltraBullet","Bullet","Blitz","Rapid","Classical","Crazyhouse","Chess960","King of the Hill","Three-check","Antichess","Atomic","Horde","Racing King"],
             },
             methods: {
@@ -141,7 +161,40 @@
                     }
                 },
                 clearAll: function() {
-                    this.type = []
+                    this.type = [];
+                    this.searchtext = '';
+                },
+                filterSearch: function () {
+                    switch (this.status) {
+                        case 'created':
+                            this.selected = this.created;
+                            break;
+                        case 'started':
+                            this.selected = this.started;
+                            break;
+                        case 'finished':
+                            this.selected = this.finished;
+                            break;
+                        case 'all':
+                            this.selected = this.created.concat(this.started.concat(this.finished))
+                            break;
+                    }
+                    this.searchtext = document.getElementById("searchtext").value;
+                    if (this.searchtext.length) {
+                        if (this.searchBy == 'name') {
+                            this.filtered = this.selected.filter(a => {
+                                return a.fullName.toLowerCase().includes(this.searchtext.toLowerCase())
+                            });
+                        }
+                        else if (this.searchBy == 'owner') {
+                            this.filtered = this.selected.filter(a => {
+                                return a.createdBy.toLowerCase().includes(this.searchtext.toLowerCase())
+                            });
+                        }
+                    }
+                    else {
+                        this.filtered = this.selected;
+                    }
                 },
             },
             mounted: function () {
