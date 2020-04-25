@@ -32,7 +32,8 @@
                         </div>
                     </div>
                     <div class="control" style="width:450px;">
-                        <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false" :clear-on-select="false" :preserve-search="true" :searchable="false" :limit="2">
+                        <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false"
+                            :clear-on-select="false" :preserve-search="true" :searchable="false" :limit="2">
                         </multiselect>
                     </div>
                     <div class="control">
@@ -40,7 +41,7 @@
                     </div>
                 </div>
                 <div class="field has-addons">
-                    <div class ="control">
+                    <div class="control">
                         <div class="select">
                             <select v-model="searchBy">
                                 <option value="name">Name</option>
@@ -49,7 +50,7 @@
                         </div>
                     </div>
                     <div class="control">
-                        <input class="input" type="text" placeholder="Search by tournament name." id="searchtext">
+                        <input class="input" type="text" placeholder="Search by tournament name." v-model="searchtext">
                     </div>
                     <div class="control">
                         <button class="button is-primary" @click="filterSearch" class=right>Search</button>
@@ -88,7 +89,9 @@
                         <td><span v-if="record.hasMaxRating">Yes</span><span v-else>No</span></td>
                         <td>{{ record.createdBy }}</td>
                         <td>{{ record.nbPlayers }}</td>
-                        <td><span v-if="record.position">{{ record.position.name + " (" + record.position.eco + ")" }}</span><span v-else>Any</span></td>
+                        <td><span
+                                v-if="record.position">{{ record.position.name + " (" + record.position.eco + ")" }}</span><span
+                                v-else>Any</span></td>
                         <td><a :href="'https://lichess.org/tournament/' + record.id">Join</a></td>
                     </tr>
                 </tbody>
@@ -133,7 +136,7 @@
                 filtered: [],
                 searchBy: 'name',
                 searchtext: '',
-                variant_options: ["UltraBullet","Bullet","Blitz","Rapid","Classical","Crazyhouse","Chess960","King of the Hill","Three-check","Antichess","Atomic","Horde","Racing King"],
+                variant_options: ["UltraBullet", "Bullet", "Blitz", "Rapid", "Classical", "Crazyhouse", "Chess960", "King of the Hill", "Three-check", "Antichess", "Atomic", "Horde", "Racing King"],
             },
             methods: {
                 filter: function () {
@@ -160,7 +163,7 @@
                         this.filtered = this.selected;
                     }
                 },
-                clearAll: function() {
+                clearAll: function () {
                     this.type = [];
                     this.searchtext = '';
                 },
@@ -179,7 +182,6 @@
                             this.selected = this.created.concat(this.started.concat(this.finished))
                             break;
                     }
-                    this.searchtext = document.getElementById("searchtext").value;
                     if (this.searchtext.length) {
                         if (this.searchBy == 'name') {
                             this.filtered = this.selected.filter(a => {
