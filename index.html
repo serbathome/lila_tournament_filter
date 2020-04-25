@@ -8,6 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+    <script src="https://unpkg.com/vue-multiselect@2.1.0"></script>
+    <link rel="stylesheet" href="https://unpkg.com/vue-multiselect@2.1.0/dist/vue-multiselect.min.css">
+    <script src="sorttable.js"></script>
 </head>
 
 <body>
@@ -20,38 +23,26 @@
                 <div class="control">
                     <div class="select">
                         <select v-model="status">
-                            <option value="created">created</option>
-                            <option value="started">started</option>
-                            <option value="finished">finished</option>
+                            <option value="all">All</option>
+                            <option value="created">Created</option>
+                            <option value="started">Started</option>
+                            <option value="finished">Finished</option>
                         </select>
                     </div>
                 </div>
-                <div class="control">
-                    <div class="select is-multiple">
-                        <select v-model="type" multiple size="4">
-                            <option selected="Any">Any</option>
-                            <option value="UltraBullet">UltraBullet</option>
-                            <option value="Bullet">Bullet</option>
-                            <option value="Blitz">Blitz</option>
-                            <option value="Rapid">Rapid</option>
-                            <option value="Classical">Classical</option>
-                            <option value="Crazyhouse">Crazyhouse</option>
-                            <option value="Chess960">Chess960</option>
-                            <option value="King of the Hill">King of the Hill</option>
-                            <option value="Three-check">Three-check</option>
-                            <option value="Antichess">Antichess</option>
-                            <option value="Atomic">Atomic</option>
-                            <option value="Horde">Horde</option>
-                            <option value="Racing King">Racing King</option>
-                        </select>
-                    </div>
+                <div class="control" style="width:450px;">
+                    <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false" :clear-on-select="false" :preserve-search="true" :placeholder="Variants" :searchable="false" :limit="2">
+                    </multiselect>
                 </div>
                 <div class="control">
-                    <button class="button is-primary" @click="filter">Filter</button>
+                    <button class="button is-danger" @click="clearAll" class=right>Clear</button>
+                </div>
+                <div class="control">
+                    <button class="button is-primary" @click="filter" class="right">Filter</button>
                 </div>
             </div>
 
-            <table class="table">
+            <table class="sortable">
                 <thead>
                     <tr>
                         <td>Name</td>
@@ -87,6 +78,7 @@
         </div>
     </div>
     <script>
+        // Vue.component('vue-multiselect', window.VueMultiselect.default)
         Number.prototype.toHHMMSS = function () {
             var sec_num = this;
             var days = Math.floor(sec_num / 86400);
@@ -109,15 +101,19 @@
         }
         var app = new Vue({
             el: '#app',
+            components: {
+                Multiselect: window.VueMultiselect.default
+            },
             data: {
                 version: '0.2',
-                status: 'created',
-                type: 'Any',
+                status: 'all',
+                type: [],
                 created: [],
                 started: [],
                 finished: [],
                 selected: [],
                 filtered: [],
+                variant_options: ["UltraBullet","Bullet","Blitz","Rapid","Classical","Crazyhouse","Chess960","King of the Hill","Three-check","Antichess","Atomic","Horde","Racing King"],
             },
             methods: {
                 filter: function () {
@@ -131,8 +127,11 @@
                         case 'finished':
                             this.selected = this.finished;
                             break;
+                        case 'all':
+                            this.selected = this.created.concat(this.started.concat(this.finished))
+                            break;
                     }
-                    if (this.type != 'Any') {
+                    if (this.type.length) {
                         this.filtered = this.selected.filter(a => {
                             return this.type.includes(a.perf.name)
                         });
@@ -140,7 +139,10 @@
                     else {
                         this.filtered = this.selected;
                     }
-                }
+                },
+                clearAll: function() {
+                    this.type = []
+                },
             },
             mounted: function () {
                 axios.get('https://lichess.org/api/tournament')
@@ -148,7 +150,7 @@
                         this.created = response.data.created;
                         this.started = response.data.started;
                         this.finished = response.data.finished;
-                        this.selected = this.created;
+                        this.selected = this.created.concat(this.started.concat(this.finished));
                         this.filtered = this.selected;
                     })
                     .catch(error => {
