@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/vue-multiselect@2.1.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/vue-multiselect@2.1.0/dist/vue-multiselect.min.css">
     <script src="sorttable.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
@@ -20,30 +21,40 @@
                 <img src="img/logo.jpg" alt="logo">
             </figure>
             <div class="field is-grouped is-grouped-centered">
+                <div class="field has-addons">
                     <div class="control" style="width:150px">
-                        <multiselect v-model="status" :options="status_options" :multiple=false :close-on-select=true
+                        <multiselect v-model="searchBy" :options="search_options" :multiple=false :close-on-select=true
                             :searchable=false :show-labels=false :allow-empty=false @input="filterSearch">
                         </multiselect>
-                    </div>
-                    <div class="control" style="width:450px;">
-                        <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false"
-                            :clear-on-select="false" :preserve-search="true" :searchable="false" :limit="2" placeholder="Variants"
-                            :show-labels=false @input="filterSearch">
-                        </multiselect>
-                    </div>
-                <div class="field has-addons">
-                    <div class="control">
-                        <div class="select" style="width:150px">
-                            <multiselect v-model="searchBy" :options="search_options" :multiple=false :close-on-select=true
-                                :searchable=false :show-labels=false :allow-empty=false @input="filterSearch">
-                            </multiselect>
-                        </div>
                     </div>
                     <div class="control is-expanded">
                         <div class="field">
                             <input class="input" type="text" :placeholder="'Search By ' + [[ searchBy ]]" v-model="searchtext" @input="filterSearch()">
                         </div>
                     </div>
+                    <div class="control">
+                        <button class="button is-primary" @click="filterSearch" class=right><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-grouped is-grouped-centered" v-if="advanced">
+                <div class="control" style="width:150px">
+                    <multiselect v-model="status" :options="status_options" :multiple=false :close-on-select=true
+                        :searchable=false :show-labels=false :allow-empty=false @input="filterSearch">
+                    </multiselect>
+                </div>
+                <div class="control" style="width:450px;">
+                    <multiselect v-model="type" :options="variant_options" :multiple=true :close-on-select="false"
+                        :clear-on-select="false" :preserve-search="true" :searchable="false" :limit="2" placeholder="Variants"
+                        :show-labels=false @input="filterSearch">
+                    </multiselect>
+                </div>
+            </div>
+            <div class="field is-grouped is-grouped-centered">
+                <div class="control">
+                    <button class="button is-info" @click="advanced = !advanced" class=right>
+                        <span v-if="advanced">Simple</span><span v-else>Advanced</span>
+                    </button>
                 </div>
                 <div class="control">
                     <button class="button is-danger" @click="clearAll" class=right>Reset</button>
@@ -86,7 +97,6 @@
         </div>
     </div>
     <script>
-        // Vue.component('vue-multiselect', window.VueMultiselect.default)
         Number.prototype.toHHMMSS = function () {
             var sec_num = this;
             var days = Math.floor(sec_num / 86400);
@@ -126,6 +136,7 @@
                 variant_options: ['UltraBullet', 'Bullet', 'Blitz', 'Rapid', 'Classical', 'Crazyhouse', 'Chess960', 'King of the Hill', 'Three-check', 'Antichess', 'Atomic', 'Horde', 'Racing King'],
                 status_options: ['All', 'Created', 'Started', 'Finished'],
                 search_options: ['Name', 'Owner'],
+                advanced: false,
             },
             methods: {
                 filter: function () {
