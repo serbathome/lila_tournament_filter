@@ -11,29 +11,22 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest
-
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python version
-      uses: actions/setup-python@v1
+    
+    # checkout code    
+    - name: Checkout code
+      uses: actions/checkout@v3
       with:
-        python-version: '3.6'
+        fetch-depth: 0
 
-    - name: Install Python dependencies
-      run: |
-        python -m venv env
-        .\env\Scripts\activate
-        pip install -r requirements.txt
-
-    - name: Zip the application files
-      run: Compress-Archive .\* app.zip
-
-    - name: 'Deploy to Azure Web App'
-      uses: azure/webapps-deploy@v2
+    # create release
+    - name: Create release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        app-name: 'serb-at-home'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_d18ec508a49c49bc8caa1fbf5176a9ce }}
-        package: '.\app.zip'
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
